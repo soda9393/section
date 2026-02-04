@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전공 선택 MBTI 검사</title>
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+    <div class="container">
+        <section id="start-screen">
+            <h1>나에게 맞는 전공은?</h1>
+            <p>MBTI를 통해 알아보는 나의 미래 전공!</p>
+            <img id="start-character" src="./logo.png" alt="항과고 로고">
+            <div class="start-actions">
+                <button onclick="startQuiz()">검사 시작하기</button>
+                <button class="sub-button small-button" onclick="toggleMajorPreview()">전공 미리보기</button>
+            </div>
+            <div id="major-preview" style="display: none;">
+                <h3>항과고 전공 미리보기</h3>
+                <ul>
+                    <li><span>🛫</span> 항공통제과 <small>(ISTJ, ESTJ, ISFJ, ESFJ)</small></li>
+                    <li><span>🔌</span> 항공전자과 <small>(INTJ, INTP, INFJ, INFP)</small></li>
+                    <li><span>📡</span> 정보통신과 <small>(ENTP, ENFP, ENTJ, ENFJ)</small></li>
+                    <li><span>⚙️</span> 항공기계과 <small>(ISTP, ESTP, ISFP, ESFP)</small></li>
+                </ul>
+                <button class="close-button small-button" onclick="closeMajorPreview()">닫기</button>
+            </div>
+        </section>
+
+        <section id="question-screen" style="display: none;">
+            <button class="small-button back-button" onclick="goToStartFromQuiz()">첫 화면으로</button>
+            <div id="progress-bar">
+                <div id="progress"></div>
+            </div>
+            <h2 id="question-text">질문 내용이 여기에 표시됩니다.</h2>
+            <div class="answer-buttons">
+                <button id="answer-a" onclick="selectAnswer(0)">선택지 A</button>
+                <button id="answer-b" onclick="selectAnswer(1)">선택지 B</button>
+            </div>
+            <p id="question-number">1 / 20</p>
+        </section>
+
+        <section id="result-screen" style="display: none;">
+            <h2>당신의 추천 전공은...</h2>
+            <p id="major-icon" aria-hidden="true">✈️</p>
+            <p id="major-name">전공 이름</p>
+            <h1 id="mbti-type">MBTI</h1>
+            <p id="major-desc">전공 상세 설명</p>
+            <button onclick="location.reload()">다시 하기</button>
+        </section>
+    </div>
+    <script src="./quiz.js"></script>
+</body>
+</html>
