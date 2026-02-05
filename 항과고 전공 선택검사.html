@@ -8,6 +8,31 @@
     
 </head>
 <body>
+    <section id="intro-scene" aria-label="인트로 구름 화면">
+        <div class="intro-sky"></div>
+        <div class="intro-stars"></div>
+        <div class="intro-cloud-layer near">
+            <span class="intro-cloud c1"></span>
+            <span class="intro-cloud c2"></span>
+            <span class="intro-cloud c3"></span>
+        </div>
+        <div class="intro-cloud-layer far">
+            <span class="intro-cloud c4"></span>
+            <span class="intro-cloud c5"></span>
+            <span class="intro-cloud c6"></span>
+        </div>
+        <div class="intro-hat-wrap">
+            <video id="intro-hat-video" class="intro-hat-video" autoplay muted playsinline preload="auto">
+                <source src="./sorting-hat.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="intro-copy">
+            <p id="intro-copy-sub">답변을 바탕으로 성향을 분석하고 있어요</p>
+            <h2 id="intro-copy-title">분류모자가 전공을 고르는 중입니다</h2>
+        </div>
+        <button id="intro-skip" type="button">건너뛰기</button>
+    </section>
+
     <div class="container">
         <section id="start-screen">
             <h1>나에게 맞는 전공은?</h1>
@@ -16,6 +41,15 @@
             <div class="start-actions">
                 <button onclick="startQuiz()">검사 시작하기</button>
                 <button class="sub-button small-button" onclick="toggleMajorPreview()">전공 미리보기</button>
+            </div>
+            <div class="quick-result">
+                <p>바로 결과 보기</p>
+                <div class="quick-result-grid">
+                    <button class="quick-result-button" onclick="showDirectResult('항공통제과')">항공통제과 바로 보기</button>
+                    <button class="quick-result-button" onclick="showDirectResult('항공전자과')">항공전자과 바로 보기</button>
+                    <button class="quick-result-button" onclick="showDirectResult('정보통신과')">정보통신과 바로 보기</button>
+                    <button class="quick-result-button" onclick="showDirectResult('항공기계과')">항공기계과 바로 보기</button>
+                </div>
             </div>
             <div id="major-preview" style="display: none;">
                 <h3>항과고 전공 미리보기</h3>
@@ -43,12 +77,15 @@
         </section>
 
         <section id="result-screen" style="display: none;">
-            <h2>당신의 추천 전공은...</h2>
-            <p id="major-icon" aria-hidden="true">✈️</p>
-            <p id="major-name">전공 이름</p>
-            <h1 id="mbti-type">MBTI</h1>
-            <p id="major-desc">전공 상세 설명</p>
-            <button onclick="location.reload()">다시 하기</button>
+            <video id="result-bg-video" class="result-bg-video" autoplay muted loop playsinline preload="auto"></video>
+            <div class="result-content">
+                <h2>당신의 추천 전공은...</h2>
+                <p id="major-icon" aria-hidden="true">✈️</p>
+                <p id="major-name">전공 이름</p>
+                <h1 id="mbti-type">MBTI</h1>
+                <p id="major-desc">전공 상세 설명</p>
+                <button onclick="location.reload()">다시 하기</button>
+            </div>
         </section>
     </div>
     <script src="./quiz.js"></script>

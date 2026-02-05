@@ -1,3 +1,78 @@
+function playResultIntro(onComplete, message) {
+    const intro = document.getElementById("intro-scene");
+    const skipButton = document.getElementById("intro-skip");
+    const hatVideo = document.getElementById("intro-hat-video");
+    const introCopySub = document.getElementById("intro-copy-sub");
+    const introCopyTitle = document.getElementById("intro-copy-title");
+    if (!intro) {
+        onComplete();
+        return;
+    }
+
+    if (introCopySub) {
+        introCopySub.innerText = message?.sub || "답변을 바탕으로 성향을 분석하고 있어요";
+    }
+    if (introCopyTitle) {
+        introCopyTitle.innerText = message?.title || "분류모자가 전공을 고르는 중입니다";
+    }
+
+    intro.style.display = "block";
+    intro.classList.remove("intro-out");
+
+    document.body.classList.add("intro-lock");
+
+    if (hatVideo) {
+        hatVideo.pause();
+        hatVideo.currentTime = 0;
+    }
+
+    let closed = false;
+    let fallbackTimer = null;
+    const closeIntro = () => {
+        if (closed) return;
+        closed = true;
+
+        if (fallbackTimer) {
+            window.clearTimeout(fallbackTimer);
+        }
+        intro.classList.add("intro-out");
+        document.body.classList.remove("intro-lock");
+        window.setTimeout(() => {
+            intro.style.display = "none";
+            onComplete();
+        }, 720);
+    };
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const fallbackDelay = prefersReducedMotion ? 800 : 8200;
+    fallbackTimer = window.setTimeout(closeIntro, fallbackDelay);
+
+    if (hatVideo) {
+        hatVideo.onended = closeIntro;
+        hatVideo.onerror = closeIntro;
+
+        hatVideo.addEventListener("loadedmetadata", () => {
+            if (prefersReducedMotion) return;
+            const durationMs = Math.round(hatVideo.duration * 1000);
+            if (!Number.isFinite(durationMs) || durationMs <= 0) return;
+            const closeAt = Math.min(durationMs + 1200, 12000);
+            window.clearTimeout(fallbackTimer);
+            window.setTimeout(closeIntro, closeAt);
+        }, { once: true });
+
+        const playPromise = hatVideo.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(() => {
+                // Autoplay can be blocked on some devices/browsers.
+            });
+        }
+    }
+
+    if (skipButton) {
+        skipButton.onclick = closeIntro;
+    }
+}
+
 const questions = [
     { q: "새로운 사람을 만나는 자리가 즐겁다.", a: "그렇다", b: "아니다", type: "EI" },
     { q: "혼자 있는 시간보다 사람들과의 시간이 에너지를 준다.", a: "그렇다", b: "아니다", type: "EI" },
@@ -46,20 +121,31 @@ const results = {
 const majorThemes = {
     "항공통제과": {
         className: "theme-control",
-        icon: "🛫"
+        icon: "🛫",
+        video: "./major-control.mp4"
     },
     "항공전자과": {
         className: "theme-electronics",
-        icon: "🔌"
+        icon: "🔌",
+        video: "./major-electronics.mp4"
     },
     "정보통신과": {
         className: "theme-network",
-        icon: "📡"
+        icon: "📡",
+        video: "./major-network.mp4"
     },
     "항공기계과": {
         className: "theme-mechanical",
-        icon: "⚙️"
+        icon: "⚙️",
+        video: "./major-mechanical.mp4"
     }
+};
+
+const majorDefaultMbti = {
+    "항공통제과": "ISTJ",
+    "항공전자과": "INTJ",
+    "정보통신과": "ENTP",
+    "항공기계과": "ISTP"
 };
 
 let currentIdx = 0;
@@ -71,6 +157,11 @@ function resetQuizState() {
     document.getElementById("progress").style.width = "0%";
     document.getElementById("question-number").innerText = `1 / ${questions.length}`;
     document.getElementById("result-screen").classList.remove("theme-control", "theme-electronics", "theme-network", "theme-mechanical", "theme-default");
+    const resultVideo = document.getElementById("result-bg-video");
+    if (resultVideo) {
+        resultVideo.pause();
+        resultVideo.removeAttribute("src");
+    }
 }
 
 function toggleMajorPreview() {
@@ -134,10 +225,43 @@ function selectAnswer(choice) {
     showResult();
 }
 
-function showResult() {
-    document.getElementById("question-screen").style.display = "none";
+function setResultBackgroundVideo(videoSrc) {
+    const resultVideo = document.getElementById("result-bg-video");
+    if (!resultVideo) return;
+
+    resultVideo.pause();
+    if (!videoSrc) {
+        resultVideo.removeAttribute("src");
+        return;
+    }
+
+    if (resultVideo.getAttribute("src") !== videoSrc) {
+        resultVideo.setAttribute("src", videoSrc);
+        resultVideo.load();
+    }
+    const playPromise = resultVideo.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {
+            // Some browsers may temporarily block autoplay.
+        });
+    }
+}
+
+function renderResultScreen(mbti, result, theme) {
     const resultScreen = document.getElementById("result-screen");
     resultScreen.style.display = "block";
+    resultScreen.classList.remove("theme-control", "theme-electronics", "theme-network", "theme-mechanical", "theme-default");
+    resultScreen.classList.add(theme.className);
+
+    setResultBackgroundVideo(theme.video);
+    document.getElementById("mbti-type").innerText = mbti;
+    document.getElementById("major-icon").innerText = theme.icon;
+    document.getElementById("major-name").innerText = result.major;
+    document.getElementById("major-desc").innerText = result.desc;
+}
+
+function showResult() {
+    document.getElementById("question-screen").style.display = "none";
 
     let mbti = "";
     mbti += scores.E >= scores.I ? "E" : "I";
@@ -151,14 +275,37 @@ function showResult() {
     };
     const theme = majorThemes[result.major] || {
         className: "theme-default",
-        icon: "✈️"
+        icon: "✈️",
+        video: ""
     };
 
-    resultScreen.classList.remove("theme-control", "theme-electronics", "theme-network", "theme-mechanical", "theme-default");
-    resultScreen.classList.add(theme.className);
+    playResultIntro(() => {
+        renderResultScreen(mbti, result, theme);
+    }, {
+        sub: "답변을 바탕으로 성향을 분석하고 있어요",
+        title: "분류모자가 전공을 고르는 중입니다"
+    });
+}
 
-    document.getElementById("mbti-type").innerText = mbti;
-    document.getElementById("major-icon").innerText = theme.icon;
-    document.getElementById("major-name").innerText = result.major;
-    document.getElementById("major-desc").innerText = result.desc;
+function showDirectResult(major) {
+    const result = Object.values(results).find((item) => item.major === major);
+    if (!result) return;
+
+    const mbti = majorDefaultMbti[major] || "MBTI";
+    const theme = majorThemes[major] || {
+        className: "theme-default",
+        icon: "✈️",
+        video: ""
+    };
+
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("question-screen").style.display = "none";
+    document.getElementById("result-screen").style.display = "none";
+
+    playResultIntro(() => {
+        renderResultScreen(mbti, result, theme);
+    }, {
+        sub: `${major} 추천 결과를 준비하고 있어요`,
+        title: "분류모자가 결과를 정리하는 중입니다"
+    });
 }
